@@ -1,16 +1,6 @@
-# qr_app
+# AlmiAssistances
 
-A new Flutter project.
+A mobile app made to allow students to check into class and to see their assistances/absences.
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## About
+This Project was made for a cloud native course with the aim for it to be used by the students of the educational center in which it was developed
