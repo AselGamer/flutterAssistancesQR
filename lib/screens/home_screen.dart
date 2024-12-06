@@ -13,6 +13,7 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
           backgroundColor: Colors.blue.shade600,
+          centerTitle: true,
           title: const Text('Inicio', style: TextStyle(color: Colors.white))),
       body: Center(
           child: SizedBox(
@@ -32,7 +33,7 @@ class HomeScreen extends StatelessWidget {
                         title: 'Faltas',
                       ),
                     ),
-					const SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     InkWell(
                       onTap: () {
                         Navigator.of(context).push(MaterialPageRoute(
@@ -43,7 +44,7 @@ class HomeScreen extends StatelessWidget {
                         title: 'Asistencias',
                       ),
                     ),
-					const SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     InkWell(
                       onTap: () {
                         Navigator.of(context).push(MaterialPageRoute(
@@ -54,7 +55,7 @@ class HomeScreen extends StatelessWidget {
                         title: 'Lector QR',
                       ),
                     ),
-					const SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     InkWell(
                       onTap: () {
                         Navigator.of(context).push(MaterialPageRoute(
