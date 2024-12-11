@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
+// import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 class QrScreen extends StatefulWidget {
   const QrScreen({super.key});
@@ -10,7 +10,7 @@ class QrScreen extends StatefulWidget {
 
 class _QrScreenState extends State<QrScreen> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
-  QRViewController? controller;
+  //QRViewController? controller;
   String? result;
 
   @override
@@ -25,7 +25,7 @@ class _QrScreenState extends State<QrScreen> {
       ),
       body: Column(
         children: [
-          Expanded(
+          /* Expanded(
             flex: 9,
             child: QRView(
               key: qrKey,
@@ -50,13 +50,13 @@ class _QrScreenState extends State<QrScreen> {
                 style: const TextStyle(fontSize: 18),
               ),
             ),
-          )
+          ) */
         ],
       ),
     );
   }
 
-  void _onQRViewCreated(QRViewController controller) {
+  /* void _onQRViewCreated(QRViewController controller) {
     setState(() {
       this.controller = controller;
     });
@@ -71,5 +71,5 @@ class _QrScreenState extends State<QrScreen> {
   void dispose() {
     controller?.dispose();
     super.dispose();
-  }
+  } */
 }
