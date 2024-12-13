@@ -8,6 +8,7 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
+  mobile_scanner: ^6.0.2
   # qr_code_scanner: ^1.0.1
 dev_dependencies:
   flutter_test:
