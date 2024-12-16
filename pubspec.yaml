@@ -10,6 +10,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   mobile_scanner: ^6.0.2
   localstore: ^1.4.0
+  loader_overlay: ^4.0.3
   # qr_code_scanner: ^1.0.1
 dev_dependencies:
   flutter_test:

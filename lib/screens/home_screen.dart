@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 import 'package:qr_app/screens/absences_screen.dart';
 import 'package:qr_app/screens/assistances_screen.dart';
 import 'package:qr_app/screens/login_screen.dart';
@@ -40,7 +41,9 @@ class HomeScreen extends StatelessWidget {
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.loaderOverlay.show();
       checkLogin();
+      context.loaderOverlay.hide();
     });
 
     return Scaffold(
@@ -48,64 +51,66 @@ class HomeScreen extends StatelessWidget {
           backgroundColor: Colors.blue.shade600,
           centerTitle: true,
           title: const Text('Inicio', style: TextStyle(color: Colors.white))),
-      body: Center(
-          child: SizedBox(
-              width: 350,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: <Widget>[
-                    InkWell(
-                      onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => const AbsencesScreen()));
-                      },
-                      child: const OptionCard(
-                        icon: Icons.access_time_filled,
-                        title: 'Faltas',
-                      ),
+      body: LoaderOverlay(
+          child: Center(
+              child: SizedBox(
+                  width: 350,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: <Widget>[
+                        InkWell(
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => const AbsencesScreen()));
+                          },
+                          child: const OptionCard(
+                            icon: Icons.access_time_filled,
+                            title: 'Faltas',
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        InkWell(
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) =>
+                                    const AssistancesScreen()));
+                          },
+                          child: const OptionCard(
+                            icon: Icons.view_list,
+                            title: 'Asistencias',
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        InkWell(
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => const QrScreen()));
+                          },
+                          child: const OptionCard(
+                            icon: Icons.qr_code_2,
+                            title: 'Lector QR',
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        InkWell(
+                          onTap: () async {
+                            await localStoreService.deleteDocument(
+                              collection: 'login',
+                              documentId: 'saved',
+                            );
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => const LoginScreen()));
+                          },
+                          child: const OptionCard(
+                            icon: Icons.vpn_key_off,
+                            title: 'Cerrar Sesion',
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 10),
-                    InkWell(
-                      onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => const AssistancesScreen()));
-                      },
-                      child: const OptionCard(
-                        icon: Icons.view_list,
-                        title: 'Asistencias',
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    InkWell(
-                      onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => const QrScreen()));
-                      },
-                      child: const OptionCard(
-                        icon: Icons.qr_code_2,
-                        title: 'Lector QR',
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    InkWell(
-                      onTap: () async {
-					  	await localStoreService.deleteDocument(
-							collection: 'login',
-							documentId: 'saved',
-						);
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => const LoginScreen()));
-                      },
-                      child: const OptionCard(
-                        icon: Icons.vpn_key_off,
-                        title: 'Cerrar Sesion',
-                      ),
-                    ),
-                  ],
-                ),
-              ))),
+                  )))),
     );
   }
 }
