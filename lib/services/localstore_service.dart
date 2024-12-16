@@ -30,4 +30,16 @@ class LocalStoreService {
       return null;
     }
   }
+
+  Future<bool> deleteDocument(
+      {required String collection, required String documentId}) async {
+    try {
+      // Attempt to delete the document
+      await _db.collection(collection).doc(documentId).delete();
+      return true; // Deletion successful
+    } catch (e) {
+      print('Error deleting document: $e');
+      return false; // Deletion failed
+    }
+  }
 }

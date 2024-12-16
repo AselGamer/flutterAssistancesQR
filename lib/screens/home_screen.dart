@@ -4,12 +4,45 @@ import 'package:qr_app/screens/assistances_screen.dart';
 import 'package:qr_app/screens/login_screen.dart';
 import 'package:qr_app/screens/qr_screen.dart';
 import 'package:qr_app/widgets/option_card.dart';
+import 'package:qr_app/services/localstore_service.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  HomeScreen({super.key});
+  final localStoreService = LocalStoreService();
+
+  void initState() async {}
+
+  Future<String?> getToken() async {
+    final user = await localStoreService.getDocument(
+        collection: 'login', documentId: 'saved');
+    if (user == null) return null;
+    String token = user['token'];
+    return token;
+  }
 
   @override
   Widget build(BuildContext context) {
+    Future<void> checkLogin() async {
+      try {
+        final String? token = await getToken();
+        final isLoggedIn = token != null ? true : false;
+        if (!isLoggedIn) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+            );
+          });
+        }
+      } catch (e) {
+        // Handle error
+      }
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      checkLogin();
+    });
+
     return Scaffold(
       appBar: AppBar(
           backgroundColor: Colors.blue.shade600,
@@ -57,7 +90,11 @@ class HomeScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     InkWell(
-                      onTap: () {
+                      onTap: () async {
+					  	await localStoreService.deleteDocument(
+							collection: 'login',
+							documentId: 'saved',
+						);
                         Navigator.of(context).push(MaterialPageRoute(
                             builder: (context) => const LoginScreen()));
                       },

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:qr_app/screens/home_screen.dart';
+import 'package:qr_app/services/localstore_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -8,6 +10,47 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final localStoreService = LocalStoreService();
+
+  String _message = '';
+
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  _attemptLogin() {
+    print(emailController.text);
+    print(passwordController.text);
+    // TODO: implement api call
+    bool resp = true;
+    if (resp) {
+      setState(() {
+        _message = '';
+      });
+	  _storeLogin(resp);
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => HomeScreen()));
+    } else {
+      setState(() {
+        _message = 'Fallo al inciar sesion.';
+      });
+    }
+  }
+
+  _storeLogin(token) async {
+  	await localStoreService.saveDocument(
+		collection: 'login',
+		documentId: 'saved',
+		data: {'token': token}
+	);
+  }
+
+  @override
+  void dispose() {
+    passwordController.dispose();
+    emailController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,6 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         children: [
                           TextField(
+                            controller: emailController,
                             decoration: InputDecoration(
                               labelText: 'Email',
                               prefixIcon: const Icon(Icons.email),
@@ -55,6 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: 15),
                           TextField(
                             obscureText: true,
+                            controller: passwordController,
                             decoration: InputDecoration(
                               labelText: 'Contraseña',
                               prefixIcon: const Icon(Icons.lock),
@@ -65,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 20),
                           ElevatedButton(
-                            onPressed: null,
+                            onPressed: () => _attemptLogin(),
                             style: ElevatedButton.styleFrom(
                               minimumSize: const Size(double.infinity, 50),
                               shape: RoundedRectangleBorder(
@@ -77,6 +122,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               style: TextStyle(fontSize: 18),
                             ),
                           ),
+                          SizedBox(height: _message != '' ? 20 : 0),
+                          Text(_message,
+                              style: const TextStyle(color: Colors.red)),
                         ],
                       ),
                     ),
