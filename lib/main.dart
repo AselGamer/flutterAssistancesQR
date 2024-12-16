@@ -1,16 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:qr_app/screens/home_screen.dart';
 import 'package:qr_app/screens/login_screen.dart';
+import 'package:qr_app/services/localstore_service.dart';
 
 void main() {
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  MyApp({super.key});
+  final localStoreService = LocalStoreService();
 
-  // Get from storage
-  final bool _isLoggedIn = false;
+  bool _isLoggedIn = false;
+
+  void initState() async {
+    final String? token = await getToken();
+	_isLoggedIn = token != null ? true : false;
+  }
+
+  Future<String?> getToken() async {
+    final user = await localStoreService.getDocument(
+        collection: 'login', documentId: 'saved');
+	if(user == null) return null;
+    String token = user['token'];
+    return token;
+  }
 
   @override
   Widget build(BuildContext context) {
