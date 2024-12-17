@@ -11,7 +11,7 @@ dependencies:
   mobile_scanner: ^6.0.2
   localstore: ^1.4.0
   loader_overlay: ^4.0.3
-  # qr_code_scanner: ^1.0.1
+  graphql_flutter: ^5.1.2
 dev_dependencies:
   flutter_test:
     sdk: flutter

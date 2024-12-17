@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:qr_app/screens/home_screen.dart';
-import 'package:qr_app/services/localstore_service.dart';
+import 'package:qr_app/services/graphql_service.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
+// import 'package:qr_app/services/localstore_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,23 +12,39 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final localStoreService = LocalStoreService();
+  // final localStoreService = LocalStoreService();
+  final GraphQLService graphQLService = GraphQLService();
 
   String _message = '';
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
-  _attemptLogin() {
+  _attemptLogin() async {
     print(emailController.text);
     print(passwordController.text);
-    // TODO: implement api call
-    bool resp = true;
-    if (resp) {
+    QueryResult resp = await graphQLService.performMutation(
+      r'''
+		mutation autenticarUsuario($input: AutenticarInput) {
+        	autenticarUsuario(input: $input ) {
+        	token
+        }
+    }
+        ''',
+      variables: {
+        'input': {
+          'email': emailController.text,
+          'password': passwordController.text,
+        }
+      },
+	  refreshTokenIfNeeded: false
+    );
+	print(resp.data);
+    if (resp.data?['token']) {
       setState(() {
         _message = '';
       });
-      _storeLogin(resp);
+      _storeLogin(resp.data?['token']);
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => HomeScreen()));
     } else {
@@ -37,8 +55,10 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   _storeLogin(token) async {
-    await localStoreService.saveDocument(
-        collection: 'login', documentId: 'saved', data: {'token': token});
+    // Change for the one in GraphqlService
+    /* await localStoreService.saveDocument(
+        collection: 'login', documentId: 'saved', data: {'token': token}); */
+    await graphQLService.updateToken(token);
   }
 
   @override

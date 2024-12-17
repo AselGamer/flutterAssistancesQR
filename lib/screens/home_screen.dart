@@ -50,6 +50,7 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
           backgroundColor: Colors.blue.shade600,
           centerTitle: true,
+          automaticallyImplyLeading: false,
           title: const Text('Inicio', style: TextStyle(color: Colors.white))),
       body: LoaderOverlay(
           child: Center(
