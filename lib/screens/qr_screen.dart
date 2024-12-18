@@ -1,5 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:ip_country_lookup/models/ip_country_data_model.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:qr_app/services/graphql_service.dart';
+import 'package:qr_app/services/localstore_service.dart';
+import 'package:network_info_plus/network_info_plus.dart';
+import 'package:ip_country_lookup/ip_country_lookup.dart';
 
 class QrScreen extends StatefulWidget {
   const QrScreen({super.key});
@@ -15,6 +22,8 @@ class _QrScreenState extends State<QrScreen> with WidgetsBindingObserver {
     detectionSpeed: DetectionSpeed.noDuplicates,
     formats: [BarcodeFormat.qrCode],
   );
+  final GraphQLService graphQLService = GraphQLService();
+  final LocalStoreService localStoreService = LocalStoreService();
   String _scannedCode = 'No code scanned yet';
   bool _isScannerPaused = false;
   bool _isTorchOn = false;
@@ -26,7 +35,7 @@ class _QrScreenState extends State<QrScreen> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  void _onDetect(BarcodeCapture capture) {
+  void _onDetect(BarcodeCapture capture) async {
     final List<Barcode> barcodes = capture.barcodes;
 
     if (barcodes.isNotEmpty) {
@@ -37,9 +46,57 @@ class _QrScreenState extends State<QrScreen> with WidgetsBindingObserver {
         _isScannerPaused = true;
       });
 
+      if (_scannedCode != 'No data') {
+        Map<String, dynamic> qrData = jsonDecode(_scannedCode);
+        dynamic resp = null;
+        if (qrData['tipo'] == 'entrada') {
+          resp = await graphQLService.performMutation(r'''
+			mutation RegistrarEntradaCurso($registrarEntradaCursoStudentId2: ID!, $courseCode: String!, $ubicacion: String!, $ip: String!, $mac: String!) {
+			  registrarEntradaCurso(studentId: $registrarEntradaCursoStudentId2, courseCode: $courseCode, ubicacion: $ubicacion, ip: $ip, mac: $mac) {
+				id
+			  }
+			}
+	  ''', variables: {
+            "registrarEntradaCursoStudentId2": graphQLService.userId,
+            "courseCode": qrData['codigo'],
+            "ubicacion": await _getCountry(),
+            "ip": await IpCountryLookup().getUserIpAddress(),
+            "mac": await NetworkInfo().getWifiBSSID()
+          }, refreshTokenIfNeeded: false);
+
+          await localStoreService.saveDocument(
+              collection: 'asistencias',
+              documentId: 'entrada',
+              data: {'id': resp.data?['registrarEntradaCurso']['id']});
+          _showScannedCodeDialog('Entrada registrada');
+        } else if (qrData['tipo'] == 'salida') {
+          dynamic entrada = await localStoreService.getDocument(
+              collection: 'asistencias', documentId: 'entrada');
+          resp = await graphQLService.performMutation(r'''
+		  	mutation RegistrarSalidaCurso($attendanceId: ID!, $registrarSalidaCursoUbicacion2: String!, $registrarSalidaCursoIp2: String!, $registrarSalidaCursoMac2: String!) {
+			  registrarSalidaCurso(attendanceId: $attendanceId, ubicacion: $registrarSalidaCursoUbicacion2, ip: $registrarSalidaCursoIp2, mac: $registrarSalidaCursoMac2) {
+				id
+			  }
+			}
+		  ''', variables: {
+            'attendanceId': entrada?['id'],
+            "registrarSalidaCursoUbicacion2": await _getCountry(),
+            "registrarSalidaCursoIp2":
+                await IpCountryLookup().getUserIpAddress(),
+            "registrarSalidaCursoMac2": await NetworkInfo().getWifiBSSID()
+          }, refreshTokenIfNeeded: false);
+          _showScannedCodeDialog('Salida registrada');
+        }
+      }
+
       // Optional: Show a dialog with the scanned code
-      _showScannedCodeDialog(barcode.rawValue);
+      // _showScannedCodeDialog(barcode.rawValue);
     }
+  }
+
+  Future<String> _getCountry() async {
+    IpCountryData lookup = await IpCountryLookup().getIpLocationData();
+    return lookup.country_name.toString();
   }
 
   void _showScannedCodeDialog(String? code) {
@@ -47,11 +104,11 @@ class _QrScreenState extends State<QrScreen> with WidgetsBindingObserver {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Scanned QR Code'),
+          title: const Text('Mensaje'),
           content: Text(code ?? 'No data'),
           actions: <Widget>[
             TextButton(
-              child: const Text('Close'),
+              child: const Text('Cerrar'),
               onPressed: () {
                 Navigator.of(context).pop();
                 // Resume scanning
@@ -124,19 +181,6 @@ class _QrScreenState extends State<QrScreen> with WidgetsBindingObserver {
                   ),
                 ),
               ],
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Container(
-              color: Colors.blue.shade600,
-              child: Center(
-                child: Text(
-                  'Scanned Code: $_scannedCode',
-                  style: const TextStyle(fontSize: 16),
-                  textAlign: TextAlign.center,
-                ),
-              ),
             ),
           ),
         ],

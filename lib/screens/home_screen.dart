@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:loader_overlay/loader_overlay.dart';
-import 'package:qr_app/screens/absences_screen.dart';
+// import 'package:qr_app/screens/absences_screen.dart';
 import 'package:qr_app/screens/assistances_screen.dart';
 import 'package:qr_app/screens/login_screen.dart';
 import 'package:qr_app/screens/qr_screen.dart';
+import 'package:qr_app/services/graphql_service.dart';
 import 'package:qr_app/widgets/option_card.dart';
 import 'package:qr_app/services/localstore_service.dart';
 
 class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
   final localStoreService = LocalStoreService();
+  final graphQLService = GraphQLService();
 
   void initState() async {}
 
@@ -35,6 +37,7 @@ class HomeScreen extends StatelessWidget {
             );
           });
         }
+		graphQLService.refreshUserId();
       } catch (e) {
         // Handle error
       }

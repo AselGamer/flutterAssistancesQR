@@ -23,18 +23,9 @@ class GraphQLService {
       documentId: 'saved',
     );
     final String? storedToken = user == null ? null : user['token'];
-    QueryResult login = await performQuery(r'''
-		query ObtenerAlumno {
-		  obtenerAlumno {
-			id
-		  }
-		}
-        ''', variables: {
-    }, refreshTokenIfNeeded: false);
-	userId = login.data?['obtenerAlumno']['id'];
 
     final HttpLink httpLink = HttpLink(
-      'http://44.206.240.85:4000/', // Replace with your actual GraphQL endpoint
+      'http://52.23.175.252:4000/', // Replace with your actual GraphQL endpoint
     );
 
     final AuthLink authLink = AuthLink(
@@ -151,9 +142,7 @@ class GraphQLService {
       } else {
         // If token refresh fails, you might want to log out the user
         await _localStoreService.deleteDocument(
-			collection: 'login',
-			documentId: 'saved'
-		);
+            collection: 'login', documentId: 'saved');
         throw Exception('Failed to refresh token');
       }
     } catch (e) {
@@ -186,5 +175,14 @@ class GraphQLService {
       variables: variables ?? {},
     );
     return _client.subscribe(options);
+  }
+
+  void refreshUserId() async {
+    QueryResult login = await performQuery(r'''
+		query Query($obtenerStudentIdToken2: String!) {
+			obtenerStudentId(token: $obtenerStudentIdToken2)
+		}
+        ''', variables: {"obtenerStudentIdToken2": _currentToken}, refreshTokenIfNeeded: false);
+    userId = login.data?['obtenerStudentId'];
   }
 }

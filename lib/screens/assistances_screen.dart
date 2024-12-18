@@ -20,32 +20,39 @@ class _AssistancesScreenState extends State<AssistancesScreen> {
     /* Assistance(date: '2023-04-15', time: '9:30 AM'),
     Assistance(date: '2023-04-20', time: '1:15 PM'),
     Assistance(date: '2023-04-28', time: '11:00 AM'), */
-    Assistance(id: '0', entradaFecha: DateTime.now(), courseCode: 'AA01'),
   ];
 
   _fillAssitances() async {
+    // print(graphQLService.userId);
     QueryResult resp = await graphQLService.performQuery(r'''
-		obtenerAsistencias(studentId: $obtenerAsistenciasStudentId2) {
-			id
-			courseCode
-			entradaFecha
-			salidaFecha
-			totalHoras
+	query ObtenerAsistencias($obtenerAsistenciasStudentId2: ID!) {
+			obtenerAsistencias(studentId: $obtenerAsistenciasStudentId2) {
+				id
+				courseCode
+				entradaFecha
+				salidaFecha
+				totalHoras
+		  }
 	  }
 	''',
         variables: {"obtenerAsistenciasStudentId2": graphQLService.userId},
         refreshTokenIfNeeded: false);
 
-    List<Map<String, dynamic>?>? respArray =
-        resp.data?['obtenerAsistencias'];
+    // print(resp.data?['obtenerAsistencias']);
+    List<dynamic> respArray = resp.data?['obtenerAsistencias'].map((item) {
+      if (item is Map) {
+        return Map<String, dynamic>.from(item);
+      }
+      throw ArgumentError('Item is not a map');
+    }).toList();
+
     List<Assistance> tempAssistances = [];
-    if (respArray == null) return;
     int assitLength = respArray.length;
     for (var i = 0; i < assitLength; i++) {
       Assistance tempAssit = Assistance(
         id: respArray[i]?['id'],
-        courseCode: respArray[i]?['courseCode'],
-        entradaFecha: respArray[i]?['entradaFecha'],
+        courseCode: (respArray[i]?['courseCode']),
+        entradaFecha: DateTime.parse(respArray[i]?['entradaFecha']),
       );
       tempAssistances.add(tempAssit);
     }
@@ -56,8 +63,11 @@ class _AssistancesScreenState extends State<AssistancesScreen> {
 
   @override
   void initState() {
-	super.initState();
-	_fillAssitances();
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // This runs after the first frame is drawn
+      _fillAssitances();
+    });
   }
 
   @override
