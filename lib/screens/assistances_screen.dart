@@ -1,19 +1,64 @@
 import 'package:flutter/material.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:qr_app/models/assistance.dart';
+import 'package:intl/intl.dart';
+import 'package:qr_app/services/graphql_service.dart';
 
 class AssistancesScreen extends StatefulWidget {
-  const AssistancesScreen ({super.key});
+  const AssistancesScreen({super.key});
 
   @override
   State<AssistancesScreen> createState() => _AssistancesScreenState();
 }
 
 class _AssistancesScreenState extends State<AssistancesScreen> {
-  final List<Assistance> absences = [
-    Assistance(date: '2023-04-15', time: '9:30 AM'),
+  final DateFormat dateFormatter = DateFormat('yyyy-MM-dd');
+  final DateFormat timerFormatter = DateFormat('hh:mm a');
+  final GraphQLService graphQLService = GraphQLService();
+
+  List<Assistance> assitances = [
+    /* Assistance(date: '2023-04-15', time: '9:30 AM'),
     Assistance(date: '2023-04-20', time: '1:15 PM'),
-    Assistance(date: '2023-04-28', time: '11:00 AM'),
+    Assistance(date: '2023-04-28', time: '11:00 AM'), */
+    Assistance(id: '0', entradaFecha: DateTime.now(), courseCode: 'AA01'),
   ];
+
+  _fillAssitances() async {
+    QueryResult resp = await graphQLService.performQuery(r'''
+		obtenerAsistencias(studentId: $obtenerAsistenciasStudentId2) {
+			id
+			courseCode
+			entradaFecha
+			salidaFecha
+			totalHoras
+	  }
+	''',
+        variables: {"obtenerAsistenciasStudentId2": graphQLService.userId},
+        refreshTokenIfNeeded: false);
+
+    List<Map<String, dynamic>?>? respArray =
+        resp.data?['obtenerAsistencias'];
+    List<Assistance> tempAssistances = [];
+    if (respArray == null) return;
+    int assitLength = respArray.length;
+    for (var i = 0; i < assitLength; i++) {
+      Assistance tempAssit = Assistance(
+        id: respArray[i]?['id'],
+        courseCode: respArray[i]?['courseCode'],
+        entradaFecha: respArray[i]?['entradaFecha'],
+      );
+      tempAssistances.add(tempAssit);
+    }
+    setState(() {
+      assitances = tempAssistances;
+    });
+  }
+
+  @override
+  void initState() {
+	super.initState();
+	_fillAssitances();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,22 +70,29 @@ class _AssistancesScreenState extends State<AssistancesScreen> {
         title: const Text('Asistencias', style: TextStyle(color: Colors.white)),
       ),
       body: ListView.separated(
-        itemCount: absences.length,
+        itemCount: assitances.length,
         separatorBuilder: (context, index) =>
             Divider(height: 1, color: Colors.grey.shade300),
         itemBuilder: (context, index) {
-          final absence = absences[index];
+          final absence = assitances[index];
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Fecha: ${absence.date}',
+                Text(
+                    'Fecha entrada: ${dateFormatter.format(absence.entradaFecha)}',
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 4),
-                Text('Hora: ${absence.time}',
-                    style: const TextStyle(fontSize: 14)),
+                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(
+                      'Hora entrada: ${timerFormatter.format(absence.entradaFecha)}',
+                      style: const TextStyle(fontSize: 14)),
+                  const SizedBox(width: 4),
+                  Text('Curso: ${absence.courseCode}',
+                      style: const TextStyle(fontSize: 14)),
+                ]),
               ],
             ),
           );

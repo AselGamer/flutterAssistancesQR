@@ -61,7 +61,7 @@ class HomeScreen extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: <Widget>[
-                        InkWell(
+                        /* InkWell(
                           onTap: () {
                             Navigator.of(context).push(MaterialPageRoute(
                                 builder: (context) => const AbsencesScreen()));
@@ -70,7 +70,7 @@ class HomeScreen extends StatelessWidget {
                             icon: Icons.access_time_filled,
                             title: 'Faltas',
                           ),
-                        ),
+                        ), */
                         const SizedBox(height: 10),
                         InkWell(
                           onTap: () {

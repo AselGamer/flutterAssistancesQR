@@ -20,31 +20,51 @@ class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
+  /* _testQuery() async {
+    QueryResult resp = await graphQLService.performQuery(r'''
+		query ObtenerAlumno {
+			obtenerAlumno(id: "d7287f62-eb33-4c3e-b6b3-a0f619032e6b") {
+				id
+				nombre
+				email
+				password
+				curso
+			}
+		}
+        ''', variables: {
+    }, refreshTokenIfNeeded: false);
+
+	print(resp.data?['obtenerAlumno']['id']);
+  } */
+
   _attemptLogin() async {
-    print(emailController.text);
-    print(passwordController.text);
-    QueryResult resp = await graphQLService.performMutation(
-      r'''
-		mutation autenticarUsuario($input: AutenticarInput) {
-        	autenticarUsuario(input: $input ) {
-        	token
-        }
-    }
-        ''',
-      variables: {
-        'input': {
-          'email': emailController.text,
-          'password': passwordController.text,
-        }
-      },
-	  refreshTokenIfNeeded: false
-    );
-	print(resp.data);
-    if (resp.data?['token']) {
+    // print(emailController.text);
+    // print(passwordController.text);
+    QueryResult resp = await graphQLService.performMutation(r'''
+		mutation IniciarSesion($email: String!, $password: String!) {
+        	iniciarSesion(
+				email: $email,
+				password: $password
+			)
+			{
+				token
+				student {
+					id
+				}
+			}
+		}
+        ''', variables: {
+      'email': emailController.text,
+      'password': passwordController.text,
+    }, refreshTokenIfNeeded: false);
+    // print(resp.data);
+    // print(resp.data?['iniciarSesion']['token']);
+    if (resp.data?['iniciarSesion']['token'] != null) {
       setState(() {
         _message = '';
       });
-      _storeLogin(resp.data?['token']);
+      _storeLogin(resp.data?['iniciarSesion']['token']);
+	  graphQLService.userId = resp.data?['iniciarSesion']['student']['id'];
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => HomeScreen()));
     } else {

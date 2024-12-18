@@ -8,6 +8,7 @@ class GraphQLService {
 
   late GraphQLClient _client;
   String? _currentToken;
+  String? userId;
   final LocalStoreService _localStoreService = LocalStoreService();
 
   GraphQLService._internal() {
@@ -22,9 +23,18 @@ class GraphQLService {
       documentId: 'saved',
     );
     final String? storedToken = user == null ? null : user['token'];
+    QueryResult login = await performQuery(r'''
+		query ObtenerAlumno {
+		  obtenerAlumno {
+			id
+		  }
+		}
+        ''', variables: {
+    }, refreshTokenIfNeeded: false);
+	userId = login.data?['obtenerAlumno']['id'];
 
     final HttpLink httpLink = HttpLink(
-      'https://your-graphql-endpoint.com/graphql', // Replace with your actual GraphQL endpoint
+      'http://44.206.240.85:4000/', // Replace with your actual GraphQL endpoint
     );
 
     final AuthLink authLink = AuthLink(
