@@ -20,23 +20,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
-  /* _testQuery() async {
-    QueryResult resp = await graphQLService.performQuery(r'''
-		query ObtenerAlumno {
-			obtenerAlumno(id: "d7287f62-eb33-4c3e-b6b3-a0f619032e6b") {
-				id
-				nombre
-				email
-				password
-				curso
-			}
-		}
-        ''', variables: {
-    }, refreshTokenIfNeeded: false);
-
-	print(resp.data?['obtenerAlumno']['id']);
-  } */
-
   _attemptLogin() async {
     // print(emailController.text);
     // print(passwordController.text);
@@ -59,7 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }, refreshTokenIfNeeded: false);
     // print(resp.data);
     // print(resp.data?['iniciarSesion']['token']);
-    if (resp.data?['iniciarSesion']['token'] != null) {
+    if (resp.data != null && resp.data?['iniciarSesion']['token'] != null) {
       setState(() {
         _message = '';
       });

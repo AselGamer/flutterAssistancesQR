@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:loader_overlay/loader_overlay.dart';
+import 'package:qr_app/screens/absences_screen.dart';
 // import 'package:qr_app/screens/absences_screen.dart';
 import 'package:qr_app/screens/assistances_screen.dart';
 import 'package:qr_app/screens/login_screen.dart';
@@ -64,7 +65,7 @@ class HomeScreen extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: <Widget>[
-                        /* InkWell(
+                        InkWell(
                           onTap: () {
                             Navigator.of(context).push(MaterialPageRoute(
                                 builder: (context) => const AbsencesScreen()));
@@ -73,7 +74,7 @@ class HomeScreen extends StatelessWidget {
                             icon: Icons.access_time_filled,
                             title: 'Faltas',
                           ),
-                        ), */
+                        ),
                         const SizedBox(height: 10),
                         InkWell(
                           onTap: () {
@@ -95,6 +96,17 @@ class HomeScreen extends StatelessWidget {
                           child: const OptionCard(
                             icon: Icons.qr_code_2,
                             title: 'Lector QR',
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        InkWell(
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => const QrScreen()));
+                          },
+                          child: const OptionCard(
+                            icon: Icons.nfc,
+                            title: 'Scanner NFC',
                           ),
                         ),
                         const SizedBox(height: 10),

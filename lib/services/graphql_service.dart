@@ -25,7 +25,7 @@ class GraphQLService {
     final String? storedToken = user == null ? null : user['token'];
 
     final HttpLink httpLink = HttpLink(
-      'http://52.23.175.252:4000/', // Replace with your actual GraphQL endpoint
+      'http://10.0.2.2:4000/', // Replace with your actual GraphQL endpoint
     );
 
     final AuthLink authLink = AuthLink(
