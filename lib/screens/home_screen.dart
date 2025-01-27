@@ -25,6 +25,13 @@ class HomeScreen extends StatelessWidget {
     return token;
   }
 
+  void refreshUserId() async {
+    final user = await localStoreService.getDocument(
+        collection: 'login', documentId: 'user_id');
+    if (user == null) return null;
+    graphQLService.userId = user['userId'];
+  }
+
   @override
   Widget build(BuildContext context) {
     Future<void> checkLogin() async {
@@ -39,7 +46,7 @@ class HomeScreen extends StatelessWidget {
             );
           });
         }
-		graphQLService.refreshUserId();
+        refreshUserId();
       } catch (e) {
         // Handle error
       }

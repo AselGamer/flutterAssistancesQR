@@ -45,6 +45,7 @@ class GraphQLService {
     // If a token was found, update the current token
     if (storedToken != null) {
       _currentToken = storedToken;
+	  refreshUserId();
     }
   }
 
@@ -52,8 +53,24 @@ class GraphQLService {
   Future<void> updateToken(String newToken) async {
     _currentToken = newToken;
     await _localStoreService.saveDocument(
-        collection: 'login', documentId: 'saved', data: {'token': newToken});
+        collection: 'login',
+        documentId: 'saved',
+        data: {'token': newToken, 'userId': userId});
     await _initializeClient(); // Reinitialize with new token
+  }
+
+  Future<void> updateUserId(String userId) async {
+    userId = userId;
+    await _localStoreService.saveDocument(
+        collection: 'login', documentId: 'user_id', data: {'userId': userId});
+    await _initializeClient(); // Reinitialize with new token
+  }
+
+  Future<void> refreshUserId() async {
+    final user = await _localStoreService.getDocument(
+        collection: 'login', documentId: 'user_id');
+    if (user == null) return;
+    userId = user['userId'];
   }
 
   /// Perform a query with optional token refresh
@@ -177,12 +194,14 @@ class GraphQLService {
     return _client.subscribe(options);
   }
 
-  void refreshUserId() async {
+  /* void refreshUserId() async {
     QueryResult login = await performQuery(r'''
 		query Query($obtenerStudentIdToken2: String!) {
 			obtenerStudentId(token: $obtenerStudentIdToken2)
 		}
-        ''', variables: {"obtenerStudentIdToken2": _currentToken}, refreshTokenIfNeeded: false);
+        ''',
+        variables: {"obtenerStudentIdToken2": _currentToken},
+        refreshTokenIfNeeded: false);
     userId = login.data?['obtenerStudentId'];
-  }
+  } */
 }

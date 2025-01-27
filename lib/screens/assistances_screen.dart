@@ -23,7 +23,6 @@ class _AssistancesScreenState extends State<AssistancesScreen> {
   ];
 
   _fillAssitances() async {
-    // print(graphQLService.userId);
     QueryResult resp = await graphQLService.performQuery(r'''
 	query ObtenerAsistencias($obtenerAsistenciasStudentId2: ID!) {
 			obtenerAsistencias(studentId: $obtenerAsistenciasStudentId2) {

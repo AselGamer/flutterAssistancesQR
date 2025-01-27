@@ -40,13 +40,12 @@ class _LoginScreenState extends State<LoginScreen> {
       'email': emailController.text,
       'password': passwordController.text,
     }, refreshTokenIfNeeded: false);
-    // print(resp.data);
     // print(resp.data?['iniciarSesion']['token']);
     if (resp.data != null && resp.data?['iniciarSesion']['token'] != null) {
       setState(() {
         _message = '';
       });
-      _storeLogin(resp.data?['iniciarSesion']['token']);
+      _storeLogin(resp.data?['iniciarSesion']['token'], resp.data?['iniciarSesion']['student']['id']);
 	  graphQLService.userId = resp.data?['iniciarSesion']['student']['id'];
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => HomeScreen()));
@@ -57,11 +56,12 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  _storeLogin(token) async {
+  _storeLogin(token, userId) async {
     // Change for the one in GraphqlService
     /* await localStoreService.saveDocument(
         collection: 'login', documentId: 'saved', data: {'token': token}); */
     await graphQLService.updateToken(token);
+	await graphQLService.updateUserId(userId);
   }
 
   @override
