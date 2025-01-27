@@ -4,6 +4,7 @@ import 'package:qr_app/screens/absences_screen.dart';
 // import 'package:qr_app/screens/absences_screen.dart';
 import 'package:qr_app/screens/assistances_screen.dart';
 import 'package:qr_app/screens/login_screen.dart';
+import 'package:qr_app/screens/nfc_screen.dart';
 import 'package:qr_app/screens/qr_screen.dart';
 import 'package:qr_app/services/graphql_service.dart';
 import 'package:qr_app/widgets/option_card.dart';
@@ -102,7 +103,7 @@ class HomeScreen extends StatelessWidget {
                         InkWell(
                           onTap: () {
                             Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => const QrScreen()));
+                                builder: (context) => const NfcScreen()));
                           },
                           child: const OptionCard(
                             icon: Icons.nfc,

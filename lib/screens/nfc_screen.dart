@@ -2,10 +2,12 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:ip_country_lookup/models/ip_country_data_model.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:qr_app/screens/home_screen.dart';
 import 'package:qr_app/services/graphql_service.dart';
 import 'package:qr_app/services/localstore_service.dart';
 import 'package:network_info_plus/network_info_plus.dart';
+import 'package:flutter_nfc_kit/flutter_nfc_kit.dart';
+import 'package:ndef/ndef.dart' as ndef;
 import 'package:ip_country_lookup/ip_country_lookup.dart';
 
 class NfcScreen extends StatefulWidget {
@@ -18,38 +20,55 @@ class NfcScreen extends StatefulWidget {
 class _NfcScreenState extends State<NfcScreen> with WidgetsBindingObserver {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   String? result;
-  final MobileScannerController _scannerController = MobileScannerController(
-    detectionSpeed: DetectionSpeed.noDuplicates,
-    formats: [BarcodeFormat.qrCode],
-  );
   final GraphQLService graphQLService = GraphQLService();
   final LocalStoreService localStoreService = LocalStoreService();
   String _scannedCode = 'No code scanned yet';
   bool _isScannerPaused = false;
-  bool _isTorchOn = false;
 
   @override
   void dispose() {
     // Always dispose the controller when not in use
-    _scannerController.dispose();
     super.dispose();
   }
 
-  void _onDetect(BarcodeCapture capture) async {
-    final List<Barcode> barcodes = capture.barcodes;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => startNFCLoop());
+  }
 
-    if (barcodes.isNotEmpty) {
-      final Barcode barcode = barcodes.first;
+  void startNFCLoop() async {
+    if (await FlutterNfcKit.nfcAvailability != NFCAvailability.available) {
+      Navigator.of(context)
+          .push(MaterialPageRoute(builder: (context) => HomeScreen()));
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Mensaje'),
+            content: const Text("La lectura NFC no esta disponible"),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Cerrar'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
 
-      setState(() {
-        _scannedCode = barcode.rawValue ?? 'No data';
-        _isScannerPaused = true;
-      });
-
-      if (_scannedCode != 'No data') {
-        Map<String, dynamic> qrData = jsonDecode(_scannedCode);
+    while (true) {
+      if (!_isScannerPaused) {
+        var tag = await FlutterNfcKit.poll(
+            timeout: const Duration(seconds: 10),
+            iosMultipleTagMessage: "Mas de una tag encontrada",
+            iosAlertMessage: "Escanea tu tag");
+        var data = tag.toJson();
         dynamic resp = null;
-        if (qrData['tipo'] == 'entrada') {
+        if (data['tipo'] == 'entrada') {
           resp = await graphQLService.performMutation(r'''
 			mutation RegistrarEntradaCurso($registrarEntradaCursoStudentId2: ID!, $courseCode: String!, $ubicacion: String!, $ip: String!, $mac: String!) {
 			  registrarEntradaCurso(studentId: $registrarEntradaCursoStudentId2, courseCode: $courseCode, ubicacion: $ubicacion, ip: $ip, mac: $mac) {
@@ -58,7 +77,7 @@ class _NfcScreenState extends State<NfcScreen> with WidgetsBindingObserver {
 			}
 	  ''', variables: {
             "registrarEntradaCursoStudentId2": graphQLService.userId,
-            "courseCode": qrData['codigo'],
+            "courseCode": data['codigo'],
             "ubicacion": await _getCountry(),
             "ip": await IpCountryLookup().getUserIpAddress(),
             "mac": await NetworkInfo().getWifiBSSID()
@@ -68,8 +87,8 @@ class _NfcScreenState extends State<NfcScreen> with WidgetsBindingObserver {
               collection: 'asistencias',
               documentId: 'entrada',
               data: {'id': resp.data?['registrarEntradaCurso']['id']});
-          _showScannedCodeDialog('Entrada registrada');
-        } else if (qrData['tipo'] == 'salida') {
+          // _showScannedCodeDialog('Entrada registrada');
+        } else if (data['tipo'] == 'salida') {
           dynamic entrada = await localStoreService.getDocument(
               collection: 'asistencias', documentId: 'entrada');
           resp = await graphQLService.performMutation(r'''
@@ -85,43 +104,15 @@ class _NfcScreenState extends State<NfcScreen> with WidgetsBindingObserver {
                 await IpCountryLookup().getUserIpAddress(),
             "registrarSalidaCursoMac2": await NetworkInfo().getWifiBSSID()
           }, refreshTokenIfNeeded: false);
-          _showScannedCodeDialog('Salida registrada');
+          // _showScannedCodeDialog('Salida registrada');
         }
       }
-
-      // Optional: Show a dialog with the scanned code
-      // _showScannedCodeDialog(barcode.rawValue);
     }
   }
 
   Future<String> _getCountry() async {
     IpCountryData lookup = await IpCountryLookup().getIpLocationData();
     return lookup.country_name.toString();
-  }
-
-  void _showScannedCodeDialog(String? code) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Mensaje'),
-          content: Text(code ?? 'No data'),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cerrar'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                // Resume scanning
-                setState(() {
-                  _isScannerPaused = false;
-                  _scannerController.start();
-                });
-              },
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -131,55 +122,31 @@ class _NfcScreenState extends State<NfcScreen> with WidgetsBindingObserver {
         centerTitle: true,
         backgroundColor: Colors.blue.shade600,
         iconTheme: Theme.of(context).iconTheme,
-        title: const Text('Lector QR', style: TextStyle(color: Colors.white)),
+        title: const Text('Lector NFC', style: TextStyle(color: Colors.white)),
         actions: [
           IconButton(
             icon: Icon(_isScannerPaused ? Icons.play_arrow : Icons.pause),
             onPressed: () {
               setState(() {
                 if (_isScannerPaused) {
-                  _scannerController.start();
                   _isScannerPaused = false;
                 } else {
-                  _scannerController.stop();
                   _isScannerPaused = true;
                 }
               });
             },
           ),
-          IconButton(
-            color: Colors.white,
-            icon: Icon(_isTorchOn ? Icons.flash_on : Icons.flash_off),
-            onPressed: () {
-              _scannerController.toggleTorch().then((_) {
-                setState(() {
-                  _isTorchOn = !_isTorchOn;
-                });
-              });
-            },
-          ),
         ],
       ),
-      body: Column(
+      body: const Column(
         children: [
           Expanded(
             flex: 4,
             child: Stack(
               children: [
-                MobileScanner(
-                  controller: _scannerController,
-                  onDetect: _onDetect,
-                ),
                 Center(
-                  child: Container(
-                    width: 300,
-                    height: 300,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.green, width: 4),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
+                    child: Text('Leyendo NFC cada 10 segundos',
+                        style: TextStyle(color: Colors.grey))),
               ],
             ),
           ),
