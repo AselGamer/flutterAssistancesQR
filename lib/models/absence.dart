@@ -1,11 +1,9 @@
 class Absence {
-  final String date;
-  final String time;
-  final String teacher;
+  final String id;
+  final DateTime datetime;
 
   Absence({
-    required this.date,
-    required this.time,
-    required this.teacher,
+    required this.id,
+    required this.datetime,
   });
 }

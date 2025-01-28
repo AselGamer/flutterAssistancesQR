@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:intl/intl.dart';
 import 'package:qr_app/models/absence.dart';
+import 'package:qr_app/services/graphql_service.dart';
 
 class AbsencesScreen extends StatefulWidget {
   const AbsencesScreen({super.key});
@@ -9,11 +12,58 @@ class AbsencesScreen extends StatefulWidget {
 }
 
 class _AbsencesScreenState extends State<AbsencesScreen> {
-  final List<Absence> absences = [
-    Absence(date: '2023-04-15', time: '9:30 AM', teacher: 'Mrs. Smith'),
+  final DateFormat dateFormatter = DateFormat('yyyy-MM-dd');
+  final DateFormat timerFormatter = DateFormat('hh:mm a');
+  final GraphQLService graphQLService = GraphQLService();
+
+  List<Absence> absences = [
+    /* Absence(date: '2023-04-15', time: '9:30 AM', teacher: 'Mrs. Smith'),
     Absence(date: '2023-04-20', time: '1:15 PM', teacher: 'Mr. Jones'),
-    Absence(date: '2023-04-28', time: '11:00 AM', teacher: 'Ms. Johnson'),
+    Absence(date: '2023-04-28', time: '11:00 AM', teacher: 'Ms. Johnson'), */
   ];
+
+  _fillAbsences() async {
+    QueryResult resp = await graphQLService.performQuery(r'''
+	query Query($obtenerFaltasPorEstudianteStudentId2: ID!) {
+	  obtenerFaltasPorEstudiante(studentId: $obtenerFaltasPorEstudianteStudentId2) {
+		id
+		studentid
+		fecha
+	  }
+	}
+	''',
+        variables: {"obtenerFaltasPorEstudianteStudentId2": graphQLService.userId},
+        refreshTokenIfNeeded: false);
+
+    List<dynamic> respArray = resp.data?['obtenerFaltasPorEstudiante'].map((item) {
+      if (item is Map) {
+        return Map<String, dynamic>.from(item);
+      }
+      throw ArgumentError('Item is not a map');
+    }).toList();
+
+    List<Absence> tempAbsences = [];
+    int assitLength = respArray.length;
+    for (var i = 0; i < assitLength; i++) {
+      Absence tempAssit = Absence(
+        id: respArray[i]?['id'],
+        datetime: DateTime.parse(respArray[i]?['fecha']),
+      );
+      tempAbsences.add(tempAssit);
+    }
+    setState(() {
+      absences = tempAbsences;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // This runs after the first frame is drawn
+      _fillAbsences();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,16 +85,12 @@ class _AbsencesScreenState extends State<AbsencesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Fecha: ${absence.date}',
+                Text('Fecha: ${dateFormatter.format(absence.datetime)}',
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 4),
-                Text('Hora: ${absence.time}',
+                Text('Hora: ${timerFormatter.format(absence.datetime)}',
                     style: const TextStyle(fontSize: 14)),
-                const SizedBox(height: 4),
-                Text('Profesor: ${absence.teacher}',
-                    style: const TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.w500)),
               ],
             ),
           );
